@@ -24,7 +24,7 @@ library(asaur)
 library(knitr)
 ```
 
-[Link to qmd (quarto markdown)](https://github.com/BSTA-150/chapter4/chapter4.qmd)
+[Link to qmd (quarto markdown)](https://github.com/BSTA-150/chapter4/blob/main/chapter4.qmd)
 
 # Introduction
 
@@ -217,4 +217,5 @@ legend("topright", legend = c("Locally Advanced", "Metastatic"),
 The log-rank family provides robust nonparametric comparison methods, but choose the right variant for your specific research question.
 
 [← Return to Course Materials](https://bsta-150.github.io/course/)
-[Link to qmd (quarto markdown)](https://github.com/BSTA-150/chapter4/chapter4.qmd)
+
+[Link to qmd (quarto markdown)](https://github.com/BSTA-150/chapter4/blob/main/chapter4.qmd)
