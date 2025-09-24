@@ -1,0 +1,220 @@
+---
+title: "Chapter 4: Nonparametric Comparison of Survival Distributions"
+subtitle: "Log-Rank Tests, Weighted Tests, and Stratification"
+author: "Eric Delmelle | Lehigh University"
+format: 
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    theme: default
+  pdf:
+    toc: true
+    number-sections: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+library(survival)
+library(asaur)
+library(knitr)
+```
+
+[Link to qmd (quarto markdown)](https://github.com/BSTA-150/chapter4/chapter4.qmd)
+
+# Introduction
+
+-   **Log-rank test** compares survival curves between groups without assuming specific distributions.
+-   Nonparametric equivalent of the t-test for survival data.
+
+**Key Applications:**
+-   Treatment comparison in clinical trials
+-   Prognostic factor analysis
+-   Group comparisons with censored data
+
+# Log-Rank Test Basics
+
+## Core Concept
+
+-   At each event time, create a 2×2 table comparing observed vs expected events between groups. 
+-   The test statistic sums these comparisons across all event times.
+
+## Simple Example
+
+```{r logrank-example}
+# Example: 16 patients, 8 in each group
+tt <- c(4, 7, 8, 12, 15, 18, 20, 25,      # Control group
+        6, 9, 14, 16, 19, 22, 28, 30)     # Treatment group
+        
+delta <- c(1, 0, 1, 1, 0, 1, 1, 0,        # Control: 5 events, 3 censored
+           0, 1, 0, 0, 0, 0, 1, 1)        # Treatment: 3 events, 5 censored
+           
+trt <- c(rep(0, 8), rep(1, 8))            # 0=control, 1=treatment
+
+# Log-rank test
+survdiff(Surv(tt, delta) ~ trt)
+
+# Visualize
+km_fit <- survfit(Surv(tt, delta) ~ trt)
+plot(km_fit, col = c("blue", "red"), lwd = 2,
+     xlab = "Time", ylab = "Survival Probability")
+legend("topright", legend = c("Control", "Treatment"), 
+       col = c("blue", "red"), lwd = 2)
+```
+
+**Result**: p = 0.05 (significant difference)
+
+# Weighted Log-Rank Tests
+
+Different weights emphasize early vs. late differences.
+
+## Fleming-Harrington Family
+
+$$w_i = [\hat{S}(t_i)]^{\rho}$$
+
+- **$\rho = 0$**: Standard log-rank (equal weights)
+- **$\rho = 1$**: Prentice-Gehan (emphasizes early differences)
+
+## Pancreatic Cancer Example
+
+```{r pancreatic-weighted}
+# Use pancreatic2 dataset
+data(pancreatic2)
+
+# Survival curves
+km_pancreatic <- survfit(Surv(pfs) ~ stage, data = pancreatic2)
+plot(km_pancreatic, col = c("blue", "red"), lwd = 2,
+     xlab = "Months", ylab = "Progression-Free Survival")
+legend("topright", legend = c("Locally Advanced", "Metastatic"),
+       col = c("blue", "red"), lwd = 2)
+
+# Standard log-rank (ρ = 0)
+cat("Standard Log-Rank:\n")
+survdiff(Surv(pfs) ~ stage, rho = 0, data = pancreatic2)
+
+# Prentice-Gehan (ρ = 1)
+cat("\nPrentice-Gehan:\n")
+survdiff(Surv(pfs) ~ stage, rho = 1, data = pancreatic2)
+```
+
+**Key Finding**: 
+-   Standard test p = 0.134 (not significant)
+-   Prentice-Gehan p = 0.030 (significant). 
+-   Why? The curves separate early but converge later - the weighted test detects the early difference.
+
+# Stratified Tests
+
+Control for categorical confounders by stratifying.
+
+$$\chi^2 = \frac{[\sum_{g=1}^G U_{0g}]^2}{\sum_{g=1}^G V_{0g}}$$
+
+## Smoking Cessation Example
+
+```{r stratified-example}
+data(pharmacoSmoking)
+
+# Unstratified test
+cat("Unstratified:\n")
+survdiff(Surv(ttr, relapse) ~ grp, data = pharmacoSmoking)
+
+# Create age groups
+pharmacoSmoking$ageGroup <- ifelse(pharmacoSmoking$age <= 49, "≤49", "50+")
+
+# Stratified by age
+cat("\nStratified by Age:\n")
+survdiff(Surv(ttr, relapse) ~ grp + strata(ageGroup), data = pharmacoSmoking)
+
+# Check age distribution
+table(pharmacoSmoking$grp, pharmacoSmoking$ageGroup)
+```
+
+**Result**: 
+-   Chi-square barely changes (8.0 → 7.0)
+-   Indicates age is not a strong confounder here.
+
+# When to Use Which Test
+
+| **Scenario** | **Test** | **Use When** |
+|--------------|----------|--------------|
+| Proportional hazards | Log-rank ($\rho=0$) | Constant treatment effect |
+| Early effect | Prentice-Gehan ($\rho=1$) | Treatment works early |
+| Confounding | Stratified | Categorical confounder |
+| Multiple confounders | Cox regression | Many covariates |
+
+# Exercises
+
+## Exercise 4.1: Weighted Tests Comparison
+
+```{r ex4-1}
+# Compare log-rank vs Prentice-Gehan
+result_lr <- survdiff(Surv(ttr, relapse) ~ grp, rho = 0, data = pharmacoSmoking)
+result_pg <- survdiff(Surv(ttr, relapse) ~ grp, rho = 1, data = pharmacoSmoking)
+
+cat("Log-rank p-value:", round(1 - pchisq(result_lr$chisq, 1), 4), "\n")
+cat("Prentice-Gehan p-value:", round(1 - pchisq(result_pg$chisq, 1), 4), "\n")
+```
+
+## Exercise 4.2: Employment Stratification
+
+```{r ex4-2}
+# Check available variables
+print(names(pharmacoSmoking)[1:10])  # First 10 variables
+
+# Stratify by employment (if variable exists)
+if("employment" %in% names(pharmacoSmoking)) {
+  survdiff(Surv(ttr, relapse) ~ grp + strata(employment), data = pharmacoSmoking)
+} else {
+  cat("Employment variable not found in standard form\n")
+  # Show available factor variables
+  factor_vars <- sapply(pharmacoSmoking, is.factor)
+  print(names(pharmacoSmoking)[factor_vars])
+}
+```
+
+## Exercise 4.3: Wilcoxon vs Log-Rank
+
+```{r ex4-3}
+# For pancreatic data (no censoring)
+os_days <- as.numeric(pancreatic2$os)
+
+# Wilcoxon test
+wilcox_result <- wilcox.test(os_days ~ pancreatic2$stage)
+
+# Log-rank test
+logrank_result <- survdiff(Surv(os_days) ~ stage, data = pancreatic2)
+
+cat("Wilcoxon p-value:", round(wilcox_result$p.value, 4), "\n")
+cat("Log-rank p-value:", round(1 - pchisq(logrank_result$chisq, 1), 4), "\n")
+```
+
+## Exercise 4.4: Overall Survival
+
+```{r ex4-4}
+# Overall survival analysis
+survdiff(Surv(os_days) ~ stage, rho = 0, data = pancreatic2)  # Log-rank
+survdiff(Surv(os_days) ~ stage, rho = 1, data = pancreatic2)  # Prentice-Gehan
+
+# Visualize
+km_os <- survfit(Surv(os_days) ~ stage, data = pancreatic2)
+plot(km_os, col = c("blue", "red"), lwd = 2,
+     xlab = "Days", ylab = "Overall Survival")
+legend("topright", legend = c("Locally Advanced", "Metastatic"),
+       col = c("blue", "red"), lwd = 2)
+```
+
+# Key Points
+
+-   **Log-rank test**: Standard for comparing survival curves
+-   **Weighted tests**: Use when treatment effects vary over time
+-   **Stratification**: Controls categorical confounders
+-   **Test choice matters**: Different tests detect different patterns
+-   **Always visualize**: Plots reveal the nature of differences
+
+The log-rank family provides robust nonparametric comparison methods, but choose the right variant for your specific research question.
+
+[← Return to Course Materials](https://bsta-150.github.io/course/)
+[Link to qmd (quarto markdown)](https://github.com/BSTA-150/chapter4/chapter4.qmd)
