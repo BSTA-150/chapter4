@@ -142,7 +142,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Log-rank test</strong> compares survival curves between groups without assuming specific distributions.</li>
 <li>Nonparametric equivalent of the t-test for survival data.</li>
 </ul>
-<p><strong>Key Applications:</strong> - Treatment comparison in clinical trials - Prognostic factor analysis - Group comparisons with censored data</p>
+<p><strong>Key Applications:</strong></p>
+<ul>
+<li>Treatment comparison in clinical trials</li>
+<li>Prognostic factor analysis</li>
+<li>Group comparisons with censored data</li>
+</ul>
 </section>
 <section id="log-rank-test-basics" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Log-Rank Test Basics</h1>
@@ -250,7 +255,12 @@ stage=M  33    18.76    15.22     0.822      4.71
  Chisq= 4.7  on 1 degrees of freedom, p= 0.03 </code></pre>
 </div>
 </div>
-<p><strong>Key Finding</strong>: - Standard test p = 0.134 (not significant) - Prentice-Gehan p = 0.030 (significant). - Why? The curves separate early but converge later - the weighted test detects the early difference.</p>
+<p><strong>Key Finding</strong>:</p>
+<ul>
+<li>Standard test p = 0.134 (not significant)</li>
+<li>Prentice-Gehan p = 0.030 (significant).</li>
+<li>Why? The curves separate early but converge later - the weighted test detects the early difference.</li>
+</ul>
 </section>
 </section>
 <section id="stratified-tests" class="level1" data-number="4">
@@ -308,7 +318,11 @@ grp=patchOnly   64       52     39.9      3.68      7.03
   patchOnly    35  29</code></pre>
 </div>
 </div>
-<p><strong>Result</strong>: - Chi-square barely changes (8.0 → 7.0) - Indicates age is not a strong confounder here.</p>
+<p><strong>Result</strong>:</p>
+<ul>
+<li>Chi-square barely changes (8.0 → 7.0)</li>
+<li>Indicates age is not a strong confounder here.</li>
+</ul>
 </section>
 </section>
 <section id="when-to-use-which-test" class="level1" data-number="5">
